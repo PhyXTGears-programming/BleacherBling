@@ -11,7 +11,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(12, 12, 6,
                             NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
                             NEO_GRB            + NEO_KHZ800);
 
-#define ourAlliance matrix.Color(255, 255, 255)
+#define ourAlliance matrix.Color(0, 255, 0)
 
 void setup() {
   // put your setup code here, to run once:
@@ -21,15 +21,70 @@ void setup() {
 }
 
 byte pos = 0;
+int c = 7;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  gears();
+  if (Serial.available() > 0) {
+    String p = "";
+    while (Serial.available() > 0) {
+      p += String((char)Serial.read());
+    }
+    Serial.println("How many times to print: " + p);
+    while (Serial.available() <= 0) {}
+    int times = Serial.parseInt();
+    Serial.println(times);
+    for (int tm = 0; tm < times; tm++) {
+      Serial.println("Printing: " + p + ". Time number " + String(tm + 1) + ".");
+      int len = p.length() * 6;
+      Serial.println(-20 - len);
+      for (int i = 12; i > -20 - len; i--) { // -32 * p.length()
+        unsigned int t = millis();
+        matrix.setCursor(i, 2);
+        matrix.setTextColor(Wheel(pos));
+        matrix.print(p);
+        updateScreen();
+        matrix.clear();
+        delay(70);
+        //      Serial.println(String(i) + ": " + String(millis() - t));
+      }
+    }
+    Serial.println("done");
+    gap();
+    return;
+  }
+  int numberSeq = 8;
+  Serial.println("c: " + String(c % numberSeq));
+  switch (c % numberSeq) {
+    case 0:
+      scrolltext("PHYXTGEARS", matrix.Color(0, 255, 0));
+      break;
+    case 1:
+      bar(false);
+      break;
+    case 2:
+      flash(true);
+      break;
+    case 3:
+      scrolltext("GOOD JOB!", matrix.Color(255, 255, 255));
+      break;
+    case 4:
+      randomText();
+      break;
+    case 5:
+      bar(true);
+      break;
+    case 6:
+      flash(false);
+      break;
+    case 7:
+      for (int i = 0; i < 10; i++) {
+        rectangleZoom(50, false);
+      }
+      break;
+  }
   gap();
-  alliance();
-  gap();
-  bar();
-  gap();
+  c++;
 }
 
 void gap () {
@@ -56,22 +111,30 @@ void updateScreen () {
   matrix.show();
 }
 
-void bar () {
+void bar (bool d) {
   for (int i = 0; i < 7; i++) {
-    for (int y = 0; y < matrix.height(); y++) {
-      matrix.drawLine(0, y, matrix.width(), y, Wheel(pos));
+    for (int j = 0; j < (d ? matrix.height() : matrix.width()); j++) {
+      matrix.drawLine((d ? 0 : j), (d ? j : 0), (d ? matrix.width() : j), (d ? j : matrix.height()), Wheel(pos));
       updateScreen();
-      //      matrix.clear();
       delay(40);
     }
-    for (int y = matrix.height() - 1; y >= 0; y--) {
-      for (int x = 0; x < matrix.width(); x++) {
-        matrix.drawPixel(x, y, Wheel(pos));
-      }
+    for (int j = (d ? matrix.height() : matrix.width()) - 1; j >= 0; j--) {
+      matrix.drawLine((d ? 0 : j), (d ? j : 0), (d ? matrix.width() : j), (d ? j : matrix.height()), Wheel(pos));
       updateScreen();
-      //      matrix.clear();
       delay(40);
     }
+  }
+}
+
+void scrolltext (String p, uint16_t color) {
+  for (int i = 12; i > -20 - p.length() * 6; i--) { // -32 * p.length()
+    unsigned int t = millis();
+    matrix.setCursor(i, 2);
+    matrix.setTextColor(matrix.Color(0, 255, 0));
+    matrix.print(p);
+    updateScreen();
+    matrix.clear();
+    delay(50);
   }
 }
 
@@ -85,12 +148,12 @@ void gears () {
     updateScreen();
     matrix.clear();
     delay(70);
-    Serial.println(String(i) + ": " + String(millis() - t));
+    //    Serial.println(String(i) + ": " + String(millis() - t));
   }
 }
 
 void alliance () {
-  String p = "1720 1741 5188";
+  String p = "GRACIOUS PROFESSIONALISM";
   for (int i = 12; i > -90; i--) { // -32 * p.length()
     unsigned int t = millis();
     matrix.setCursor(i, 2);
@@ -99,7 +162,67 @@ void alliance () {
     updateScreen();
     matrix.clear();
     delay(70);
-    Serial.println(String(i) + ": " + String(millis() - t));
+    //    Serial.println(String(i) + ": " + String(millis() - t));
   }
 }
 
+void randomText () {
+  //  String p = "SHOUT OUT TO 447 ROBOT BLING";
+  //  for (int i = 12; i > -150; i--) { // -32 * p.length()
+  //    unsigned int t = millis();
+  //    matrix.setCursor(i, 2);
+  //    matrix.setTextColor(ourAlliance);
+  //    matrix.print(p);
+  //    updateScreen();
+  //    matrix.clear();
+  //    delay(70);
+  //    //    Serial.println(String(i) + ": " + String(millis() - t));
+  //  }
+}
+
+void flash (bool w) {
+  for (int i = 0; i < 1500; i++) {
+    uint16_t color = matrix.Color(random(256), random(256), random(256));
+    if (w) {
+      color = matrix.Color(255, 255, 255);
+    }
+    int x = random(matrix.width());
+    int y = random(matrix.width());
+    matrix.drawPixel(x, y, color);
+    updateScreen();
+    if (w) {
+      matrix.drawPixel(x, y, matrix.Color(0, 0, 0));
+    }
+  }
+}
+
+void rectangleZoom(int Delay, bool noFill) {
+  int x = 0;
+  int y = 0;
+  int width = matrix.width();
+  int height = matrix.height();
+  int iterations = min(width / 2, height / 2);
+  for (int i = 0; i < iterations; i++) {
+    matrix.drawRect(x, y, width, height, Wheel(pos));
+    delay(Delay);
+    updateScreen();
+    pos += 10;
+    if (noFill) {
+      matrix.clear();
+    }
+    x += 1;
+    y += 1;
+    width -= 2;
+    height -= 2;
+    //    if (Length < c) {
+    //      c += 1;
+    //    }
+  }
+}
+
+void rectFromCenter (int centerX, int centerY, int radius, uint16_t color) {
+  int a = radius * 2;
+  a++;
+  matrix.drawRect((centerX - radius), (centerY - radius), a, a, color);
+  Serial.println("X: " + String(centerX) + " Y: " + String(centerY) + " R: " + String(radius));
+}
