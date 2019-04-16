@@ -96,7 +96,7 @@ void loop() {
   switch (counter % caseTotal) 
   {
     case 0:
-      scrolltext("     PHYXTGEARS 1720 - BleacherBling!!!", matrix.Color(0, 255, 0));
+      scrolltext("     Congrats Red Alliance!!!", matrix.Color(255, 0, 0));
       break;
       
     case 1:
@@ -118,9 +118,8 @@ void loop() {
       break;
       
     case 5:
-      sparkle();   //sparkle - random colored dots
-      //flash(false);  // was flash(false);
-      //make it put dots up a little faster
+      scrolltext("     Let's go to Worlds!!!", matrix.Color(255, 0, 0));
+     
       break;
       
     case 6:
@@ -148,7 +147,8 @@ delay(1000);
       break;
 
     case 9:
-      waverightPatriotic();
+      scrolltext("     FIRST ROBOTICS!!", matrix.Color(255, 0, 0));
+     waverightPatriotic();
       delay(2000);
       break;
       
@@ -157,7 +157,6 @@ delay(1000);
       break;    
       
     case 11:
-      //scrolltext("     Shout out to young Damien, Team 340!!!", matrix.Color(0, 0, 255));
       spiral();
       spiral();
       spiral();
